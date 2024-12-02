@@ -56,7 +56,7 @@ async function fetchData() {
             lastClose,
             goldPrice,
             lastPrice,
-            percentChange
+            percentChange,
             todayTrends
         };
 
