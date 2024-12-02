@@ -13,6 +13,7 @@ Last Close: ${result.lastClose}
 Gold Price: ${result.goldPrice}
 Last Price: ${result.lastPrice}
 Percent Change: ${result.percentChange}
+Today Trends: ${result.todayTrends}
 `;
     bot.telegram.sendMessage(process.env.CHANNEL_ID, message);
 }

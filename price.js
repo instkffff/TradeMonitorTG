@@ -37,6 +37,7 @@ async function fetchData() {
         // 提取 goldPrice, todayTrends 和 lastClose
         const goldPrice = data.items[0].xauPrice;
         const lastClose = data.items[0].xauClose;
+        const todayTrends = data.items[0].pcXau
 
         console.log('Timestamp:', timestamp);
         console.log('Last Close:', lastClose);
@@ -56,6 +57,7 @@ async function fetchData() {
             goldPrice,
             lastPrice,
             percentChange
+            todayTrends
         };
 
         // 更新 lastPrice
