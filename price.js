@@ -110,17 +110,4 @@ function calculatePercentChange(oldValue, newValue) {
     return change.toFixed(2); // 保留两位小数
 }
 
-async function test() {
-    try {
-        const result = await fetchData();
-        console.log(result);
-        botSend(result);
-    } catch (error) {
-        console.error('Test failed:', error);
-        bot.telegram.sendMessage(process.env.CHANNEL_ID, 'Test failed: ' + error.message);
-    }
-}
-
-test();
-
 export { fetchData, isMarketOpen };
