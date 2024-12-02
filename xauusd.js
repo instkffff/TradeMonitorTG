@@ -7,7 +7,7 @@ dotenv.config({ path: './config.env' });
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 function botSend(result) {
-    bot.telegram.sendMessage(process.env.CHAT_ID, result);
+    bot.telegram.sendMessage(process.env.CHANNEL_ID, result);
 }
 
 if (isMarketOpen()) {
