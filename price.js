@@ -5,7 +5,6 @@ import moment from 'moment-timezone';
 const apiUrl = 'https://data-asg.goldprice.org/dbXRates/USD';
 
 // 存储上一次的结果
-let lastResult = null;
 let lastPrice = null;
 
 /**
@@ -26,9 +25,9 @@ function isMarketOpen() {
 
 /**
  * 发送请求并处理响应
+ * @returns {Promise<Object>} 包含时间戳、上次收盘价、黄金价格、上次价格和百分比变化的对象
  */
 async function fetchData() {
-
     try {
         const data = await makeRequest(apiUrl);
 
@@ -37,25 +36,33 @@ async function fetchData() {
 
         // 提取 goldPrice, todayTrends 和 lastClose
         const goldPrice = data.items[0].xauPrice;
-        const todayTrends = data.items[0].pcXau;
         const lastClose = data.items[0].xauClose;
 
         console.log('Timestamp:', timestamp);
-        console.log('Today Trends:', todayTrends);
         console.log('Last Close:', lastClose);
         console.log('Gold Price:', goldPrice);
 
+        let percentChange = 'N/A';
         if (lastPrice !== null) {
             console.log('Last Price:', lastPrice);
-            const percentChange = calculatePercentChange(lastPrice, goldPrice);
+            percentChange = calculatePercentChange(lastPrice, goldPrice);
             console.log('Percent Change:', percentChange);
         }
 
         // 保存当前结果为上一次结果
-        lastResult = data;
         lastPrice = goldPrice;
+
+        // 返回包含所需数据的对象
+        return {
+            timestamp,
+            lastClose,
+            goldPrice,
+            lastPrice,
+            percentChange
+        };
     } catch (error) {
         console.error('Error fetching data:', error);
+        throw error; // 抛出错误以便调用者处理
     }
 }
 
@@ -100,7 +107,15 @@ function calculatePercentChange(oldValue, newValue) {
     return change.toFixed(2); // 保留两位小数
 }
 
-setInterval(fetchData, 60 * 1000);
+async function test() {
+    try {
+        const dataList = await fetchData();
+        console.log(dataList);
+    } catch (error) {
+        console.error('Test failed:', error);
+    }
+}
 
+test();
 
 export { fetchData, isMarketOpen };

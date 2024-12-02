@@ -12,7 +12,7 @@ function botSend(result) {
 
 if (isMarketOpen()) {
     setInterval(async () => {
-        const result = await fetchData();
+        let result = await fetchData();
         botSend(result);
     }, 1000 * 60 * 10); // 修改为每10分钟执行一次
 }
