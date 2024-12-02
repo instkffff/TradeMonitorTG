@@ -107,15 +107,4 @@ function calculatePercentChange(oldValue, newValue) {
     return change.toFixed(2); // 保留两位小数
 }
 
-async function test() {
-    try {
-        const dataList = await fetchData();
-        console.log(dataList);
-    } catch (error) {
-        console.error('Test failed:', error);
-    }
-}
-
-test();
-
 export { fetchData, isMarketOpen };
