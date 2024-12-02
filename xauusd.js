@@ -7,12 +7,26 @@ dotenv.config({ path: './config.env' });
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 function botSend(result) {
-    bot.telegram.sendMessage(process.env.CHANNEL_ID, result);
+    const message = `
+Timestamp: ${result.timestamp}
+Last Close: ${result.lastClose}
+Gold Price: ${result.goldPrice}
+Last Price: ${result.lastPrice}
+Percent Change: ${result.percentChange}
+`;
+    bot.telegram.sendMessage(process.env.CHANNEL_ID, message);
 }
 
 if (isMarketOpen()) {
     setInterval(async () => {
-        let result = await fetchData();
-        botSend(result);
+        try {
+            let result = await fetchData();
+            botSend(result);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            bot.telegram.sendMessage(process.env.CHANNEL_ID, 'Error fetching data: ' + error.message);
+        }
     }, 1000 * 60 * 10); // 修改为每10分钟执行一次
 }
+
+bot.launch();
