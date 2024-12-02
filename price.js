@@ -49,17 +49,20 @@ async function fetchData() {
             console.log('Percent Change:', percentChange);
         }
 
-        // 保存当前结果为上一次结果
-        lastPrice = goldPrice;
-
-        // 返回包含所需数据的对象
-        return {
+        // 创建返回对象
+        const result = {
             timestamp,
             lastClose,
             goldPrice,
             lastPrice,
             percentChange
         };
+
+        // 更新 lastPrice
+        lastPrice = goldPrice;
+
+        // 返回包含所需数据的对象
+        return result;
     } catch (error) {
         console.error('Error fetching data:', error);
         throw error; // 抛出错误以便调用者处理
@@ -106,5 +109,18 @@ function calculatePercentChange(oldValue, newValue) {
     const change = (newValue - oldValue) / oldValue * 100;
     return change.toFixed(2); // 保留两位小数
 }
+
+async function test() {
+    try {
+        const result = await fetchData();
+        console.log(result);
+        botSend(result);
+    } catch (error) {
+        console.error('Test failed:', error);
+        bot.telegram.sendMessage(process.env.CHANNEL_ID, 'Test failed: ' + error.message);
+    }
+}
+
+test();
 
 export { fetchData, isMarketOpen };
