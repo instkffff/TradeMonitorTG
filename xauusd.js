@@ -17,7 +17,7 @@ Last Price: ${result.lastPrice}
 Percent Change: ${result.percentChange}
 Today Trends: ${result.todayTrends}
 `;
-    bot.telegram.sendMessage(process.env.CHANNEL_ID, message);
+    bot.telegram.sendMessage(process.env.CHANNEL_ID, message, { parse_mode: 'Markdown' });
 }
 
 function botSend1(result) {
@@ -30,7 +30,7 @@ Last Price: ${result.LastPrice}
 Percent Change: ${result.PercentChange}
 Today Trends: ${result.TodayTrends}
 `;
-    bot.telegram.sendMessage(process.env.CHANNEL_ID, message);
+    bot.telegram.sendMessage(process.env.CHANNEL_ID, message, { parse_mode: 'Markdown' });
 }
 
 if (isMarketOpen()) {
