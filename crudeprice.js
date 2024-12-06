@@ -24,11 +24,11 @@ async function getCrudeOilFuturesPrice() {
         // 提取所需字段
         const result = {
             Timestamp: moment().tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
-            'Last Close': data.regularMarketPreviousClose,
-            'Crude Price': currentCrudePrice,
-            'Last Price': lastCrudePrice,
-            'Percent Change': percentChange,
-            'Today Trends': data.regularMarketChangePercent
+            LastClose: data.regularMarketPreviousClose,
+            CrudePrice: currentCrudePrice,
+            LastPrice: lastCrudePrice,
+            PercentChange: percentChange,
+            TodayTrends: data.regularMarketChangePercent
         };
 
         // 更新上次获取的价格
@@ -41,18 +41,4 @@ async function getCrudeOilFuturesPrice() {
     }
 }
 
-// 调用函数获取数据
-getCrudeOilFuturesPrice().then(data => {
-    console.log('Crude Oil Futures Data:', data);
-}).catch(error => {
-    console.error('Error:', error);
-});
-
-// 示例：每隔一段时间获取一次数据
-setInterval(() => {
-    getCrudeOilFuturesPrice().then(data => {
-        console.log('Crude Oil Futures Data:', data);
-    }).catch(error => {
-        console.error('Error:', error);
-    });
-}, 60000); // 每分钟获取一次数据
+export { getCrudeOilFuturesPrice };

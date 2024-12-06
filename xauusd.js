@@ -1,6 +1,7 @@
 import { Telegraf } from "telegraf";
 import dotenv from 'dotenv';
 import { fetchData, isMarketOpen } from "./price.js";
+import { getCrudeOilFuturesPrice } from "./crudeprice.js";
 
 dotenv.config({ path: './config.env' });
 
@@ -18,6 +19,18 @@ Today Trends: ${result.todayTrends}
     bot.telegram.sendMessage(process.env.CHANNEL_ID, message);
 }
 
+function botSend1(result) {
+    const message = `
+Timestamp: ${result.Timestamp}
+Last Close: ${result.LastClose}
+Crude Price: ${result.CrudePrice}
+Last Price: ${result.lastPrice}
+Percent Change: ${result.PercentChange}
+Today Trends: ${result.TodayTrends}
+`;
+    bot.telegram.sendMessage(process.env.CHANNEL_ID, message);
+}
+
 if (isMarketOpen()) {
     setInterval(async () => {
         try {
@@ -27,7 +40,20 @@ if (isMarketOpen()) {
             console.error('Error fetching data:', error);
             bot.telegram.sendMessage(process.env.CHANNEL_ID, 'Error fetching data: ' + error.message);
         }
-    }, 1000 * 60 * 10); // 修改为每10分钟执行一次
+    }, 1000 * 60 * 10); // 每10分钟执行一次
 }
+
+// 启动第二个定时任务，延迟5分钟后开始
+setTimeout(() => {
+    setInterval(async () => {
+        try {
+            let result = await getCrudeOilFuturesPrice();
+            botSend1(result);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            bot.telegram.sendMessage(process.env.CHANNEL_ID, 'Error fetching data: ' + error.message);
+        }
+    }, 1000 * 60 * 10); // 每10分钟执行一次
+}, 1000 * 60 * 5); // 延迟5分钟启动
 
 bot.launch();
