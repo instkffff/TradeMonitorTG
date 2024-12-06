@@ -1,4 +1,7 @@
 import yf from 'yahoo-finance2';
+import moment from 'moment-timezone';
+
+let lastCrudePrice = null;
 
 /**
  * 获取原油期货价格
@@ -9,7 +12,29 @@ async function getCrudeOilFuturesPrice() {
         const queryOptions = { modules: ['price'] };
         const data = await yf.quote('CL=F', queryOptions);
 
-        console.log(data);
+        // 获取当前原油期货价格
+        const currentCrudePrice = data.price.regularMarketPrice;
+
+        // 计算百分比变化
+        let percentChange = 'N/A';
+        if (lastCrudePrice !== null) {
+            percentChange = ((currentCrudePrice - lastCrudePrice) / lastCrudePrice) * 100;
+        }
+
+        // 提取所需字段
+        const result = {
+            Timestamp: moment().tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
+            'Last Close': data.price.regularMarketPreviousClose,
+            'Crude Price': currentCrudePrice,
+            'Last Price': lastCrudePrice,
+            'Percent Change': percentChange,
+            'Today Trends': data.price.regularMarketChange
+        };
+
+        // 更新上次获取的价格
+        lastCrudePrice = currentCrudePrice;
+
+        return result;
     } catch (error) {
         console.error('Error fetching data:', error);
         throw error; // 抛出错误以便调用者处理
@@ -22,3 +47,12 @@ getCrudeOilFuturesPrice().then(data => {
 }).catch(error => {
     console.error('Error:', error);
 });
+
+// 示例：每隔一段时间获取一次数据
+setInterval(() => {
+    getCrudeOilFuturesPrice().then(data => {
+        console.log('Crude Oil Futures Data:', data);
+    }).catch(error => {
+        console.error('Error:', error);
+    });
+}, 60000); // 每分钟获取一次数据
