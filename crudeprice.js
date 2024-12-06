@@ -28,7 +28,7 @@ async function getCrudeOilFuturesPrice() {
             'Crude Price': currentCrudePrice,
             'Last Price': lastCrudePrice,
             'Percent Change': percentChange,
-            'Today Trends': data.regularMarketChange
+            'Today Trends': data.regularMarketChangePercent
         };
 
         // 更新上次获取的价格
