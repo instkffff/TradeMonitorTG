@@ -13,7 +13,7 @@ async function getCrudeOilFuturesPrice() {
         const data = await yf.quote('CL=F', queryOptions);
 
         // 获取当前原油期货价格
-        const currentCrudePrice = data.price.regularMarketPrice;
+        const currentCrudePrice = data.regularMarketPrice;
 
         // 计算百分比变化
         let percentChange = 'N/A';
@@ -24,11 +24,11 @@ async function getCrudeOilFuturesPrice() {
         // 提取所需字段
         const result = {
             Timestamp: moment().tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
-            'Last Close': data.price.regularMarketPreviousClose,
+            'Last Close': data.regularMarketPreviousClose,
             'Crude Price': currentCrudePrice,
             'Last Price': lastCrudePrice,
             'Percent Change': percentChange,
-            'Today Trends': data.price.regularMarketChange
+            'Today Trends': data.regularMarketChange
         };
 
         // 更新上次获取的价格
