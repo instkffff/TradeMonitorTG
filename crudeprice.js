@@ -16,9 +16,12 @@ async function getCrudeOilFuturesPrice() {
         const currentCrudePrice = data.regularMarketPrice;
 
         // 计算百分比变化
-        let percentChange = 'N/A';
+        let percentChange;
         if (lastCrudePrice !== null) {
             percentChange = ((currentCrudePrice - lastCrudePrice) / lastCrudePrice) * 100;
+            percentChange = parseFloat(percentChange).toFixed(2); // 转换为数字并限制为2位小数
+        } else {
+            percentChange = 'N/A';
         }
 
         // 提取所需字段
@@ -27,7 +30,7 @@ async function getCrudeOilFuturesPrice() {
             LastClose: data.regularMarketPreviousClose,
             CrudePrice: currentCrudePrice,
             LastPrice: lastCrudePrice,
-            PercentChange: parseFloat(percentChange.toFixed(2)),
+            PercentChange: percentChange,
             TodayTrends: data.regularMarketChangePercent
         };
 
