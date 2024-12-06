@@ -11,7 +11,8 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "moment-timezone": "^0.5.46",
-    "telegraf": "^4.16.3"
+    "telegraf": "^4.16.3",
+    "yahoo-finance2": "^2.13.2"
   },
   "type": "module"
 }
