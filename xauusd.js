@@ -26,7 +26,7 @@ function botSend1(result) {
 Timestamp: ${result.Timestamp}
 Last Close: ${result.LastClose}
 Crude Price: ${result.CrudePrice}
-Last Price: ${result.lastPrice}
+Last Price: ${result.LastPrice}
 Percent Change: ${result.PercentChange}
 Today Trends: ${result.TodayTrends}
 `;
