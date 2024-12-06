@@ -9,21 +9,7 @@ async function getCrudeOilFuturesPrice() {
         const queryOptions = { modules: ['price'] };
         const data = await yf.quote('CL=F', queryOptions);
 
-        console.log('Timestamp:', data.timestamp);
-        console.log('Open:', data.regularMarketOpen.fmt);
-        console.log('High:', data.regularMarketDayHigh.fmt);
-        console.log('Low:', data.regularMarketDayLow.fmt);
-        console.log('Close:', data.regularMarketPreviousClose.fmt);
-        console.log('Volume:', data.regularMarketVolume.fmt);
-
-        return {
-            timestamp: data.timestamp,
-            open: data.regularMarketOpen.fmt,
-            high: data.regularMarketDayHigh.fmt,
-            low: data.regularMarketDayLow.fmt,
-            close: data.regularMarketPreviousClose.fmt,
-            volume: data.regularMarketVolume.fmt
-        };
+        console.log(data);
     } catch (error) {
         console.error('Error fetching data:', error);
         throw error; // 抛出错误以便调用者处理
