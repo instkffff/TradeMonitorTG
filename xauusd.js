@@ -9,7 +9,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 function botSend(result) {
     const message = `
-**XAUUSD**
+*XAUUSD*
 Timestamp: ${result.timestamp}
 Last Close: ${result.lastClose}
 Gold Price: ${result.goldPrice}
@@ -22,7 +22,7 @@ Today Trends: ${result.todayTrends}
 
 function botSend1(result) {
     const message = `
-**WTI CRUDE**
+*WTI CRUDE*
 Timestamp: ${result.Timestamp}
 Last Close: ${result.LastClose}
 Crude Price: ${result.CrudePrice}
