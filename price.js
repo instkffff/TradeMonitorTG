@@ -32,7 +32,7 @@ async function fetchData() {
         const data = await makeRequest(apiUrl);
 
         // 获取当前时间戳
-        const timestamp = moment().tz('America/New_York').format('YYYY-MM-DD HH:mm:ss');
+        const timestamp = moment().tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss');
 
         // 提取 goldPrice, todayTrends 和 lastClose
         const goldPrice = data.items[0].xauPrice;
