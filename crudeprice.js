@@ -27,7 +27,7 @@ async function getCrudeOilFuturesPrice() {
             LastClose: data.regularMarketPreviousClose,
             CrudePrice: currentCrudePrice,
             LastPrice: lastCrudePrice,
-            PercentChange: percentChange,
+            PercentChange: parseFloat(percentChange.toFixed(2)),
             TodayTrends: data.regularMarketChangePercent
         };
 
