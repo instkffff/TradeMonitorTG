@@ -8,22 +8,6 @@ const apiUrl = 'https://data-asg.goldprice.org/dbXRates/USD';
 let lastPrice = null;
 
 /**
- * 检查是否在市场开放时间内
- * @returns {boolean} 市场是否开放
- */
-function isMarketOpen() {
-    const now = moment().tz('America/New_York');
-    const dayOfWeek = now.day(); // 0 (Sunday) to 6 (Saturday)
-    const hour = now.hour();
-    const minute = now.minute();
-
-    // 周一至周五，18:05 - 16:59 UTC
-    return (dayOfWeek >= 1 && dayOfWeek <= 5) &&
-           ((hour === 18 && minute >= 5) || (hour > 18) ||
-            (hour === 16 && minute < 59) || (hour < 16));
-}
-
-/**
  * 发送请求并处理响应
  * @returns {Promise<Object>} 包含时间戳、上次收盘价、黄金价格、上次价格和百分比变化的对象
  */
@@ -112,4 +96,4 @@ function calculatePercentChange(oldValue, newValue) {
     return change.toFixed(2); // 保留两位小数
 }
 
-export { fetchData, isMarketOpen };
+export { fetchData };
