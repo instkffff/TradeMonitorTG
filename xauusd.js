@@ -109,4 +109,13 @@ bot.command('BTC', (ctx) => { // 新增比特币价格消息开关命令
     }
 });
 
+bot.command('List', (ctx) => { // 新增 /List 命令
+    const statusMessage = `
+*XAUUSD Status:* ${xauusdStatus ? 'Enabled' : 'Disabled'}
+*CRUDE Status:* ${crudeStatus ? 'Enabled' : 'Disabled'}
+*BTC Status:* ${btcStatus ? 'Enabled' : 'Disabled'}
+`;
+    ctx.reply(statusMessage, { parse_mode: 'Markdown' });
+});
+
 bot.launch();
