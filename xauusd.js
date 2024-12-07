@@ -36,13 +36,13 @@ Today Trends: ${result.TodayTrends}
 let xauusdStatus = true;
 let crudeStatus = true;
 
-function SendTimer(func, interval, delay, status) {
+function SendTimer(messageFunc, resultFunc, interval, delay, status) {
     setTimeout(() => {
         setInterval(async () => {
             if (!status()) return; // 使用状态函数来检查是否执行
             try {
-                let result = await func();
-                func(result);
+                let result = await resultFunc();
+                messageFunc(result);
             } catch (error) {
                 console.error('Error fetching data:', error);
                 bot.telegram.sendMessage(process.env.CHANNEL_ID, 'Error fetching data: ' + error.message);
@@ -51,8 +51,8 @@ function SendTimer(func, interval, delay, status) {
     }, delay);
 }
 
-SendTimer(() => fetchData().then(XAUUSD), 1000 * 60 * 10, 0, () => xauusdStatus); // 每10分钟执行一次，立即启动
-SendTimer(() => getCrudeOilFuturesPrice().then(WTICRUDE), 1000 * 60 * 10, 1000 * 60 * 5, () => crudeStatus); // 每10分钟执行一次，延迟5分钟启动
+SendTimer(XAUUSD, fetchData, 1000 * 60 * 10, 0, () => xauusdStatus); // 每10分钟执行一次，立即启动
+SendTimer(WTICRUDE, getCrudeOilFuturesPrice, 1000 * 60 * 10, 1000 * 60 * 5, () => crudeStatus); // 每10分钟执行一次，延迟5分钟启动
 
 bot.command('XAUUSD', (ctx) => {
     const arg = ctx.message.text.split(' ')[1];
