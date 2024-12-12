@@ -8,7 +8,8 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 let markets = {}; // 用于存储所有市场的数据
 let marketNames = {}; // 用于存储市场名称
-let marketTimers = {}; // 用于存储每个市场的定时器ID
+let marketIndex = 0; // 当前处理的市场索引
+let globalInterval = parseInt(process.env.TIMER_INTERVAL || 3, 10) * 1000 * 60; // 默认时间间隔为3分钟
 
 /**
  * 发送市场数据
@@ -37,28 +38,20 @@ async function sendMarketData(market) {
 }
 
 /**
- * 设置市场定时器
- * @param {string} market - 市场符号
- * @param {number} interval - 时间间隔（分钟）
+ * 循环发送市场数据
  */
-function setMarketTimer(market, interval) {
-    const intervalTime = interval * 1000 * 60;
-    marketTimers[market] = setInterval(() => sendMarketData(market), intervalTime);
-}
-
-/**
- * 收集市场数据并设置定时器
- */
-async function collectMarketData() {
-    for (const market of Object.keys(markets)) {
-        // 清除之前的定时器
-        if (marketTimers[market]) {
-            clearInterval(marketTimers[market]);
-        }
-
-        // 设置新的定时器，默认间隔时间为3分钟
-        setMarketTimer(market, process.env.TIMER_INTERVAL || 3);
+function cycleSendMarketData() {
+    const marketSymbols = Object.keys(markets).filter(market => markets[market] === null); // 只处理启用的市场
+    if (marketSymbols.length === 0) {
+        console.log('No enabled markets to send data.');
+        return;
     }
+
+    const currentMarket = marketSymbols[marketIndex];
+    sendMarketData(currentMarket).then(() => {
+        marketIndex = (marketIndex + 1) % marketSymbols.length; // 更新索引，循环到下一个市场
+        setTimeout(cycleSendMarketData, globalInterval); // 设置下一次发送的时间间隔
+    });
 }
 
 // /timer 命令
@@ -73,26 +66,18 @@ bot.command('timer', async (ctx) => {
         return ctx.reply('时间间隔必须是大于0的整数');
     }
 
-    // 清除所有之前的定时器
-    for (const market of Object.keys(marketTimers)) {
-        clearInterval(marketTimers[market]);
-        delete marketTimers[market];
-    }
-
-    // 设置所有启用市场的新的定时器
-    for (const market of Object.keys(markets)) {
-        if (markets[market] === null) { // 检查市场是否启用
-            setMarketTimer(market, newInterval);
-        }
-    }
+    // 更新全局时间间隔
+    globalInterval = newInterval * 1000 * 60;
 
     ctx.reply(`Set timer for all enabled markets to ${newInterval} minutes`);
+
+    // 重新启动循环任务
+    clearTimeout(cycleSendMarketDataTimeout);
+    cycleSendMarketData();
 });
 
 // 初始化市场数据和定时器
-collectMarketData().then(() => {
-    console.log('Market data and timers initialized');
-});
+cycleSendMarketData();
 
 /**
  * 根据序号获取市场符号
@@ -191,10 +176,9 @@ bot.command('enable', (ctx) => {
     markets[marketSymbol] = null; // 设置为null表示启用
     ctx.reply(`Enabled market: ${marketSymbol}`);
 
-    // 如果定时器未设置，则重新设置定时器
-    if (!marketTimers[marketSymbol]) {
-        setMarketTimer(marketSymbol, process.env.TIMER_INTERVAL || 3);
-    }
+    // 重新启动循环任务
+    clearTimeout(cycleSendMarketDataTimeout);
+    cycleSendMarketData();
 });
 
 // /disable 命令
@@ -214,11 +198,9 @@ bot.command('disable', (ctx) => {
     markets[marketSymbol] = 'disabled'; // 设置为'disabled'表示禁用
     ctx.reply(`Disabled market: ${marketSymbol}`);
 
-    // 清除定时器
-    if (marketTimers[marketSymbol]) {
-        clearInterval(marketTimers[marketSymbol]);
-        delete marketTimers[marketSymbol];
-    }
+    // 重新启动循环任务
+    clearTimeout(cycleSendMarketDataTimeout);
+    cycleSendMarketData();
 });
 
 // 运行 Bot
