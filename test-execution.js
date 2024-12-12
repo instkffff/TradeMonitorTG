@@ -1,5 +1,5 @@
 import { format } from 'moment-timezone';
-import { getMarketPrice } from './pricequery';
+import { getMarketPrice } from './pricequery.js';
 
 // 初始化时区
 const realm = 'Asia/Shanghai';
