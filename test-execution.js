@@ -1,15 +1,14 @@
-import { format } from 'moment-timezone';
-import { getMarketPrice } from './pricequery.js';
+import { moment } from 'moment-timezone';
 
-// 初始化时区
-const realm = 'Asia/Shanghai';
+// 假设你有一个 pricequery.js 文件，其中包含 getMarketPrice 函数
+import { getMarketPrice } from './pricequery';
 
 /**
  * 测试获取市场价格信息的脚本
  */
 const testGetMarketPrice = async (symbol) => {
     try {
-        const currentTime = format(new Date(), 'YYYY-MM-DD HH:mm:ss', { timezone: realm });
+        const currentTime = moment().tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss');
         const data = await getMarketPrice(symbol);
 
         console.log(`--- Test for symbol: ${symbol} ---`);
