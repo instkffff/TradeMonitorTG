@@ -113,7 +113,8 @@ bot.command('list', (ctx) => {
     let index = 1;
     for (const market of Object.keys(markets)) {
         const name = marketNames[market] || 'N/A';
-        listMessage += `${index}. ${market} (${name}) - ${markets[market] !== null ? 'Enabled' : 'Disabled'}\n`;
+        const status = markets[market] === null ? 'Enabled' : 'Disabled';
+        listMessage += `${index}. ${market} (${name}) - ${status}\n`;
         index++;
     }
     ctx.reply(listMessage, { parse_mode: 'Markdown' });
