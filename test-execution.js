@@ -1,4 +1,4 @@
-import { moment } from 'moment-timezone';
+import moment from 'moment-timezone';
 
 // 假设你有一个 pricequery.js 文件，其中包含 getMarketPrice 函数
 import { getMarketPrice } from './pricequery.js';
