@@ -76,14 +76,17 @@ bot.command('timer', async (ctx) => {
     // 清除所有之前的定时器
     for (const market of Object.keys(marketTimers)) {
         clearInterval(marketTimers[market]);
+        delete marketTimers[market];
     }
 
-    // 设置所有市场的新的定时器
+    // 设置所有启用市场的新的定时器
     for (const market of Object.keys(markets)) {
-        setMarketTimer(market, newInterval);
+        if (markets[market] === null) { // 检查市场是否启用
+            setMarketTimer(market, newInterval);
+        }
     }
 
-    ctx.reply(`Set timer for all markets to ${newInterval} minutes`);
+    ctx.reply(`Set timer for all enabled markets to ${newInterval} minutes`);
 });
 
 // 初始化市场数据和定时器
