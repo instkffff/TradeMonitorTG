@@ -1,6 +1,5 @@
-const yf = require('yahoo-finance2');
-const moment = require('moment-timezone');
-const { getMarketPrice } = require('./pricequery');
+import { format } from 'moment-timezone';
+import { getMarketPrice } from './pricequery';
 
 // 初始化时区
 const realm = 'Asia/Shanghai';
@@ -8,9 +7,9 @@ const realm = 'Asia/Shanghai';
 /**
  * 测试获取市场价格信息的脚本
  */
-async function testGetMarketPrice(symbol) {
+const testGetMarketPrice = async (symbol) => {
     try {
-        const currentTime = moment().tz(realm).format('YYYY-MM-DD HH:mm:ss');
+        const currentTime = format(new Date(), 'YYYY-MM-DD HH:mm:ss', { timezone: realm });
         const data = await getMarketPrice(symbol);
 
         console.log(`--- Test for symbol: ${symbol} ---`);
@@ -23,25 +22,24 @@ async function testGetMarketPrice(symbol) {
     } catch (error) {
         console.error(`Error fetching data for symbol ${symbol} - ${error.message}`);
     }
-}
+};
 
 // 定义商品代码列表
 const symbols = ['GC=F', 'CL=F', 'BTC-USD'];
 
 // 执行测试
-async function runTests() {
+const runTests = async () => {
     for (const symbol of symbols) {
         // 第一次执行
         console.log(`Running first test for symbol: ${symbol}`);
         await testGetMarketPrice(symbol);
-        console.log('First test completed. Waiting for 5 seconds.');
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 5000)); // 间隔5秒
 
         // 第二次执行
         console.log(`Running second test for symbol: ${symbol}`);
         await testGetMarketPrice(symbol);
         console.log('Second test completed. Moving to next symbol.');
     }
-}
+};
 
 runTests();
