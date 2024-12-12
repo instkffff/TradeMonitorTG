@@ -10,6 +10,7 @@ let markets = {}; // 用于存储所有市场的数据
 let marketNames = {}; // 用于存储市场名称
 let marketIndex = 0; // 当前处理的市场索引
 let globalInterval = parseInt(process.env.TIMER_INTERVAL || 3, 10) * 1000 * 60; // 默认时间间隔为3分钟
+let cycleSendMarketDataTimeout; // 定义定时器变量
 
 /**
  * 发送市场数据
@@ -50,7 +51,7 @@ function cycleSendMarketData() {
     const currentMarket = marketSymbols[marketIndex];
     sendMarketData(currentMarket).then(() => {
         marketIndex = (marketIndex + 1) % marketSymbols.length; // 更新索引，循环到下一个市场
-        setTimeout(cycleSendMarketData, globalInterval); // 设置下一次发送的时间间隔
+        cycleSendMarketDataTimeout = setTimeout(cycleSendMarketData, globalInterval); // 设置下一次发送的时间间隔
     });
 }
 
