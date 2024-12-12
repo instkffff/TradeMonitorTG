@@ -28,3 +28,7 @@ async function testGetMarketPrice(symbol) {
 testGetMarketPrice('GC=F');
 testGetMarketPrice('CL=F');
 testGetMarketPrice('BTC-USD');
+
+testGetMarketPrice('GC=F');
+testGetMarketPrice('CL=F');
+testGetMarketPrice('BTC-USD');
