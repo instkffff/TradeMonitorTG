@@ -1,5 +1,6 @@
 import { Telegraf } from 'telegraf';
 import { config } from 'dotenv';
+import { getMarketPrice } from './pricequery.js';
 
 config({ path: './config.env' });
 
@@ -24,9 +25,9 @@ async function updateMarketData(market) {
  * 收集市场数据
  */
 async function collectMarketData() {
-    Object.keys(markets).forEach(async (market) => {
+    for (const market of Object.keys(markets)) {
         await updateMarketData(market);
-    });
+    }
 }
 
 // 定时更新市场数据
@@ -38,9 +39,9 @@ setInterval(collectMarketData, 1000 * 60 * 10); // 每10分钟刷新一次数据
 // /list 命令
 bot.command('list', (ctx) => {
     let listMessage = `*Current Markets*\n`;
-    Object.keys(markets).forEach((market) => {
-        listMessage += `${market} - ${markets[market] ? 'Enabled' : 'Disabled'}\n`;
-    });
+    for (const market of Object.keys(markets)) {
+        listMessage += `${market} - ${markets[market] !== null ? 'Enabled' : 'Disabled'}\n`;
+    }
     ctx.reply(listMessage, { parse_mode: 'Markdown' });
 });
 
@@ -54,7 +55,7 @@ bot.command('name', async (ctx) => {
     const newMarketName = args[2];
 
     // 检查市场是否存在
-    if (!markets[marketSymbol]) {
+    if (markets[marketSymbol] === undefined) {
         ctx.reply(`Market ${marketSymbol} not found.`);
         return;
     }
@@ -67,7 +68,7 @@ bot.command('name', async (ctx) => {
 // /add 命令
 bot.command('add', async (ctx) => {
     const marketSymbol = ctx.message.text.split(' ')[1];
-    if (!markets[marketSymbol]) {
+    if (markets[marketSymbol] === undefined) {
         try {
             markets[marketSymbol] = null;
             await updateMarketData(marketSymbol); // 立即更新新增市场的数据
@@ -84,7 +85,7 @@ bot.command('add', async (ctx) => {
 // /remove 命令
 bot.command('remove', async (ctx) => {
     const marketSymbol = ctx.message.text.split(' ')[1];
-    if (!markets[marketSymbol]) {
+    if (markets[marketSymbol] === undefined) {
         ctx.reply(`Market not found.`);
     } else {
         delete markets[marketSymbol];
@@ -95,10 +96,10 @@ bot.command('remove', async (ctx) => {
 // /enable 命令
 bot.command('enable', (ctx) => {
     const marketSymbol = ctx.message.text.split(' ')[1];
-    if (!markets[marketSymbol]) {
+    if (markets[marketSymbol] === undefined) {
         ctx.reply(`Market not found.`);
     } else {
-        markets[marketSymbol] = null;
+        markets[marketSymbol] = null; // 设置为null表示启用
         ctx.reply(`Enabled market: ${marketSymbol}`);
     }
 });
@@ -106,10 +107,10 @@ bot.command('enable', (ctx) => {
 // /disable 命令
 bot.command('disable', (ctx) => {
     const marketSymbol = ctx.message.text.split(' ')[1];
-    if (!markets[marketSymbol]) {
+    if (markets[marketSymbol] === undefined) {
         ctx.reply(`Market not found.`);
     } else {
-        delete markets[marketSymbol];
+        markets[marketSymbol] = 'disabled'; // 设置为'disabled'表示禁用
         ctx.reply(`Disabled market: ${marketSymbol}`);
     }
 });
