@@ -1,5 +1,6 @@
-import moment from 'moment-timezone';
-import { getMarketPrice } from './pricequery.js';
+const yf = require('yahoo-finance2');
+const moment = require('moment-timezone');
+const { getMarketPrice } = require('./pricequery');
 
 // 初始化时区
 const realm = 'Asia/Shanghai';
@@ -20,15 +21,27 @@ async function testGetMarketPrice(symbol) {
         console.log(`Percent Change: ${data.PercentChange}`);
         console.log(`Today Trends: ${data.TodayTrends}`);
     } catch (error) {
-        console.error(`Error fetching data for symbol ${symbol}: ${error.message}`);
+        console.error(`Error fetching data for symbol ${symbol} - ${error.message}`);
     }
 }
 
-// 测试 XAUUSD 和 CL=F
-testGetMarketPrice('GC=F');
-testGetMarketPrice('CL=F');
-testGetMarketPrice('BTC-USD');
+// 定义商品代码列表
+const symbols = ['GC=F', 'CL=F', 'BTC-USD'];
 
-testGetMarketPrice('GC=F');
-testGetMarketPrice('CL=F');
-testGetMarketPrice('BTC-USD');
+// 执行测试
+async function runTests() {
+    for (const symbol of symbols) {
+        // 第一次执行
+        console.log(`Running first test for symbol: ${symbol}`);
+        await testGetMarketPrice(symbol);
+        console.log('First test completed. Waiting for 5 seconds.');
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        // 第二次执行
+        console.log(`Running second test for symbol: ${symbol}`);
+        await testGetMarketPrice(symbol);
+        console.log('Second test completed. Moving to next symbol.');
+    }
+}
+
+runTests();
