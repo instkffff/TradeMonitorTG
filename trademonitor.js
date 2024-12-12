@@ -1,7 +1,7 @@
-const { Telegraf } = require('telegraf');
-const dotenv = require('dotenv');
+import { Telegraf } from 'telegraf';
+import { config } from 'dotenv';
 
-dotenv.config({ path: './config.env' });
+config({ path: './config.env' });
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
