@@ -64,31 +64,26 @@ async function collectMarketData() {
 // /timer 命令
 bot.command('timer', async (ctx) => {
     const args = ctx.message.text.split(' ');
-    if (args.length !== 3) {
-        return ctx.reply('Usage: /timer #品种序号# 时间间隔(分钟)');
+    if (args.length !== 2) {
+        return ctx.reply('Usage: /timer 时间间隔(分钟)');
     }
-    const index = parseInt(args[1], 10);
-    const newInterval = parseInt(args[2], 10);
+    const newInterval = parseInt(args[1], 10);
 
     if (isNaN(newInterval) || newInterval <= 0) {
         return ctx.reply('时间间隔必须是大于0的整数');
     }
 
-    const marketSymbol = getMarketByIndex(index);
-    if (!marketSymbol) {
-        ctx.reply(`Market with index ${index} not found.`);
-        return;
+    // 清除所有之前的定时器
+    for (const market of Object.keys(marketTimers)) {
+        clearInterval(marketTimers[market]);
     }
 
-    // 清除之前的定时器
-    if (marketTimers[marketSymbol]) {
-        clearInterval(marketTimers[marketSymbol]);
+    // 设置所有市场的新的定时器
+    for (const market of Object.keys(markets)) {
+        setMarketTimer(market, newInterval);
     }
 
-    // 设置新的定时器
-    setMarketTimer(marketSymbol, newInterval);
-
-    ctx.reply(`Set timer for market ${marketSymbol} to ${newInterval} minutes`);
+    ctx.reply(`Set timer for all markets to ${newInterval} minutes`);
 });
 
 // 初始化市场数据和定时器
@@ -191,6 +186,11 @@ bot.command('enable', (ctx) => {
 
     markets[marketSymbol] = null; // 设置为null表示启用
     ctx.reply(`Enabled market: ${marketSymbol}`);
+
+    // 如果定时器未设置，则重新设置定时器
+    if (!marketTimers[marketSymbol]) {
+        setMarketTimer(marketSymbol, process.env.TIMER_INTERVAL || 3);
+    }
 });
 
 // /disable 命令
@@ -209,6 +209,12 @@ bot.command('disable', (ctx) => {
 
     markets[marketSymbol] = 'disabled'; // 设置为'disabled'表示禁用
     ctx.reply(`Disabled market: ${marketSymbol}`);
+
+    // 清除定时器
+    if (marketTimers[marketSymbol]) {
+        clearInterval(marketTimers[marketSymbol]);
+        delete marketTimers[marketSymbol];
+    }
 });
 
 // 运行 Bot
