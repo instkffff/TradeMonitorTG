@@ -8,69 +8,98 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 let markets = {}; // 用于存储所有市场的数据
 let marketNames = {}; // 用于存储市场名称
+let marketTimers = {}; // 用于存储每个市场的定时器ID
 
 /**
- * 更新市场数据
+ * 发送市场数据
+ * @param {string} market - 市场符号
  */
-async function updateMarketData(market) {
+async function sendMarketData(market) {
     try {
         const result = await getMarketPrice(market);
-        markets[market] = result;
+        if (result !== null) {
+            const name = marketNames[market] || market;
+            let message = `*${name}*\n`;
+            message += `Timestamp: ${result.Timestamp}\n`;
+            message += `LastClose: ${result.LastClose}\n`;
+            message += `CurrentPrice: ${result.CurrentPrice}\n`;
+            message += `LastPrice: ${result.LastPrice}\n`;
+            message += `PercentChange: ${result.PercentChange}\n`;
+            message += `TodayTrends: ${result.TodayTrends}\n\n`;
+            bot.telegram.sendMessage(process.env.CHANNEL_ID, message, { parse_mode: 'Markdown' });
+        } else {
+            bot.telegram.sendMessage(process.env.CHANNEL_ID, `*${market}*: Disabled\n\n`, { parse_mode: 'Markdown' });
+        }
     } catch (error) {
-        console.error(`Error fetching data for market ${market}:`, error);
-        markets[market] = null;
+        console.error(`Error sending data for market ${market}:`, error);
+        bot.telegram.sendMessage(process.env.CHANNEL_ID, `*${market}*: Error\n\n`, { parse_mode: 'Markdown' });
     }
 }
 
 /**
- * 收集市场数据
+ * 设置市场定时器
+ * @param {string} market - 市场符号
+ * @param {number} interval - 时间间隔（分钟）
+ */
+function setMarketTimer(market, interval) {
+    const intervalTime = interval * 1000 * 60;
+    marketTimers[market] = setInterval(() => sendMarketData(market), intervalTime);
+}
+
+/**
+ * 收集市场数据并设置定时器
  */
 async function collectMarketData() {
     for (const market of Object.keys(markets)) {
-        await updateMarketData(market);
-    }
-}
-
-/**
- * 发送市场数据到Telegram频道
- */
-async function sendMarketData() {
-    await collectMarketData(); // 先收集数据
-    const marketKeys = Object.keys(markets);
-    const intervalTime = 1000 * 60 * 10 / marketKeys.length; // 计算每个市场的发送间隔时间
-
-    let currentIndex = 0;
-
-    function sendNextMarket() {
-        if (currentIndex < marketKeys.length) {
-            const market = marketKeys[currentIndex];
-            const name = marketNames[market] || 'N/A';
-            const result = markets[market] !== null ? markets[market] : 'Disabled';
-            if (result !== 'Disabled') {
-                let message = `*${name}*\n`;
-                message += `Timestamp: ${result.Timestamp}\n`;
-                message += `LastClose: ${result.LastClose}\n`;
-                message += `CurrentPrice: ${result.CurrentPrice}\n`;
-                message += `LastPrice: ${result.LastPrice}\n`;
-                message += `PercentChange: ${result.PercentChange}\n`;
-                message += `TodayTrends: ${result.TodayTrends}\n\n`;
-                bot.telegram.sendMessage(process.env.CHANNEL_ID, message, { parse_mode: 'Markdown' });
-            } else {
-                bot.telegram.sendMessage(process.env.CHANNEL_ID, `*${name} (${market})*: Disabled\n\n`, { parse_mode: 'Markdown' });
-            }
-            currentIndex++;
-            setTimeout(sendNextMarket, intervalTime);
+        // 清除之前的定时器
+        if (marketTimers[market]) {
+            clearInterval(marketTimers[market]);
         }
-    }
 
-    sendNextMarket();
+        // 设置新的定时器，默认间隔时间为3分钟
+        setMarketTimer(market, process.env.TIMER_INTERVAL || 3);
+    }
 }
 
-// 定时发送市场数据
-setInterval(sendMarketData, 1000 * 60 * 10); // 每10分钟发送一次数据
+// /timer 命令
+bot.command('timer', async (ctx) => {
+    const args = ctx.message.text.split(' ');
+    if (args.length !== 3) {
+        return ctx.reply('Usage: /timer #品种序号# 时间间隔(分钟)');
+    }
+    const index = parseInt(args[1], 10);
+    const newInterval = parseInt(args[2], 10);
+
+    if (isNaN(newInterval) || newInterval <= 0) {
+        return ctx.reply('时间间隔必须是大于0的整数');
+    }
+
+    const marketSymbol = getMarketByIndex(index);
+    if (!marketSymbol) {
+        ctx.reply(`Market with index ${index} not found.`);
+        return;
+    }
+
+    // 清除之前的定时器
+    if (marketTimers[marketSymbol]) {
+        clearInterval(marketTimers[marketSymbol]);
+    }
+
+    // 设置新的定时器
+    setMarketTimer(marketSymbol, newInterval);
+
+    ctx.reply(`Set timer for market ${marketSymbol} to ${newInterval} minutes`);
+});
+
+// 初始化市场数据和定时器
+collectMarketData().then(() => {
+    console.log('Market data and timers initialized');
+});
 
 /**
  * 根据序号获取市场符号
+ * @param {number} index - 市场序号
+ * @returns {string|null} 市场符号或null
  */
 function getMarketByIndex(index) {
     const marketKeys = Object.keys(markets);
@@ -101,7 +130,7 @@ bot.command('name', async (ctx) => {
     if (args.length !== 3) {
         return ctx.reply('Usage: /name #品种序号# 品种名称');
     }
-    const index = parseInt(args[1], 10);
+    const index = parseInt(args[1].replace('#', ''), 10); // 移除 '#' 并转换为整数
     const newMarketName = args[2];
 
     const marketSymbol = getMarketByIndex(index);
@@ -113,9 +142,6 @@ bot.command('name', async (ctx) => {
     // 存储市场名称
     marketNames[marketSymbol] = newMarketName;
 
-    // 使用命名后的品种名称发送数据
-    const result = markets[marketSymbol];
-    bot.telegram.sendMessage(process.env.CHANNEL_ID, `*${newMarketName}*\n${result}`, { parse_mode: 'Markdown' });
     ctx.reply(`Set name for market ${marketSymbol} to ${newMarketName}`);
 });
 
@@ -123,14 +149,8 @@ bot.command('name', async (ctx) => {
 bot.command('add', async (ctx) => {
     const marketSymbol = ctx.message.text.split(' ')[1];
     if (markets[marketSymbol] === undefined) {
-        try {
-            markets[marketSymbol] = null;
-            await updateMarketData(marketSymbol); // 立即更新新增市场的数据
-            ctx.reply(`Added market: ${marketSymbol}`);
-        } catch (error) {
-            console.error(`Failed to add market ${marketSymbol}:`, error);
-            ctx.reply(`Failed to add ${marketSymbol}`);
-        }
+        markets[marketSymbol] = null;
+        ctx.reply(`Added market: ${marketSymbol}`);
     } else {
         ctx.reply(`Market ${marketSymbol} already exists.`);
     }
