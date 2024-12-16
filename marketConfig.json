@@ -1,0 +1,24 @@
+{
+    "markets": {
+      "GC=F": null,
+      "CL=F": null,
+      "^IXIC": "disabled",
+      "^N225": null,
+      "NQ=F": null,
+      "BTC-USD": null,
+      "CNY=X": "disabled",
+      "JPYCNY=X": "disabled",
+      "DX-Y.NYB": null
+    },
+    "marketNames": {
+      "GC=F": "GOLD",
+      "CL=F": "CRUDE",
+      "^IXIC": "NASDQ",
+      "^N225": "Nikkei225",
+      "NQ=F": "NasdaqFutures",
+      "BTC-USD": "BTC",
+      "CNY=X": "N/A",
+      "JPYCNY=X": "N/A",
+      "DX-Y.NYB": "USD"
+    }
+  }
