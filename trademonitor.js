@@ -98,31 +98,7 @@ async function processCommandQueue() {
     isProcessing = true;
     const { command, ctx, args } = commandQueue.shift();
     try {
-        switch (command) {
-            case 'timer':
-                await handleTimerCommand(ctx, args);
-                break;
-            case 'list':
-                await handleListCommand(ctx);
-                break;
-            case 'name':
-                await handleNameCommand(ctx, args);
-                break;
-            case 'add':
-                await handleAddCommand(ctx, args);
-                break;
-            case 'remove':
-                await handleRemoveCommand(ctx, args);
-                break;
-            case 'enable':
-                await handleEnableCommand(ctx, args);
-                break;
-            case 'disable':
-                await handleDisableCommand(ctx, args);
-                break;
-            default:
-                ctx.reply('Unknown command');
-        }
+        await handleCommand(ctx, command, args);
     } catch (error) {
         console.error(`Error processing command ${command}:`, error);
         ctx.reply('An error occurred while processing your command.');
@@ -130,133 +106,6 @@ async function processCommandQueue() {
         isProcessing = false;
         processCommandQueue(); // 继续处理下一个命令
     }
-}
-
-/**
- * 处理 /timer 命令
- */
-async function handleTimerCommand(ctx, args) {
-    const newInterval = parseInt(args[1], 10);
-    if (isNaN(newInterval) || newInterval <= 0) {
-        return ctx.reply('时间间隔必须是大于0的整数');
-    }
-
-    globalInterval = newInterval * 1000 * 60;
-
-    ctx.reply(`Set timer for all enabled markets to ${newInterval} minutes`);
-
-    clearTimeout(cycleSendMarketDataTimeout);
-    cycleSendMarketData();
-}
-
-/**
- * 处理 /list 命令
- */
-async function handleListCommand(ctx) {
-    let listMessage = `*Current Markets*\n`;
-    let index = 1;
-    for (const market of Object.keys(markets)) {
-        const name = marketNames[market] || 'N/A';
-        const status = markets[market] === null ? 'Enabled' : 'Disabled';
-        listMessage += `${index}. ${market} (${name}) - ${status}\n`;
-        index++;
-    }
-    ctx.reply(listMessage, { parse_mode: 'Markdown' });
-}
-
-/**
- * 处理 /name 命令
- */
-async function handleNameCommand(ctx, args) {
-    const index = parseInt(args[1].replace('#', ''), 10);
-    const newMarketName = args[2];
-
-    const marketSymbol = getMarketByIndex(index);
-    if (!marketSymbol) {
-        ctx.reply(`Market with index ${index} not found.`);
-        return;
-    }
-
-    marketNames[marketSymbol] = newMarketName;
-    writeConfig(); // 更新配置文件
-
-    ctx.reply(`Set name for market ${marketSymbol} to ${newMarketName}`);
-}
-
-/**
- * 处理 /add 命令
- */
-async function handleAddCommand(ctx, args) {
-    const marketSymbol = args[1];
-    if (markets[marketSymbol] === undefined) {
-        markets[marketSymbol] = null;
-        writeConfig(); // 更新配置文件
-
-        ctx.reply(`Added market: ${marketSymbol}`);
-    } else {
-        ctx.reply(`Market ${marketSymbol} already exists.`);
-    }
-}
-
-/**
- * 处理 /remove 命令
- */
-async function handleRemoveCommand(ctx, args) {
-    const index = parseInt(args[1], 10);
-
-    const marketSymbol = getMarketByIndex(index);
-    if (!marketSymbol) {
-        ctx.reply(`Market with index ${index} not found.`);
-        return;
-    }
-
-    delete markets[marketSymbol];
-    delete marketNames[marketSymbol];
-    writeConfig(); // 更新配置文件
-
-    ctx.reply(`Removed market: ${marketSymbol}`);
-}
-
-/**
- * 处理 /enable 命令
- */
-async function handleEnableCommand(ctx, args) {
-    const index = parseInt(args[1], 10);
-
-    const marketSymbol = getMarketByIndex(index);
-    if (!marketSymbol) {
-        ctx.reply(`Market with index ${index} not found.`);
-        return;
-    }
-
-    markets[marketSymbol] = null;
-    writeConfig(); // 更新配置文件
-
-    ctx.reply(`Enabled market: ${marketSymbol}`);
-
-    clearTimeout(cycleSendMarketDataTimeout);
-    cycleSendMarketData();
-}
-
-/**
- * 处理 /disable 命令
- */
-async function handleDisableCommand(ctx, args) {
-    const index = parseInt(args[1], 10);
-
-    const marketSymbol = getMarketByIndex(index);
-    if (!marketSymbol) {
-        ctx.reply(`Market with index ${index} not found.`);
-        return;
-    }
-
-    markets[marketSymbol] = 'disabled';
-    writeConfig(); // 更新配置文件
-
-    ctx.reply(`Disabled market: ${marketSymbol}`);
-
-    clearTimeout(cycleSendMarketDataTimeout);
-    cycleSendMarketData();
 }
 
 /**
@@ -272,46 +121,153 @@ function getMarketByIndex(index) {
     return null;
 }
 
+/**
+ * 验证正整数
+ * @param {string} value - 要验证的值
+ * @returns {number|null} 验证后的正整数或null
+ */
+function validatePositiveInteger(value) {
+    const num = parseInt(value, 10);
+    return isNaN(num) || num <= 0 ? null : num;
+}
+
+/**
+ * 处理所有命令
+ * @param {object} ctx - 上下文对象
+ * @param {string} command - 命令名称
+ * @param {string[]} args - 命令参数
+ */
+async function handleCommand(ctx, command, args) {
+    switch (command) {
+        case 'timer':
+            {
+                const newInterval = validatePositiveInteger(args[1]);
+                if (!newInterval) {
+                    return ctx.reply('时间间隔必须是大于0的整数');
+                }
+
+                globalInterval = newInterval * 1000 * 60;
+
+                ctx.reply(`Set timer for all enabled markets to ${newInterval} minutes`);
+
+                clearTimeout(cycleSendMarketDataTimeout);
+                cycleSendMarketData();
+            }
+            break;
+        case 'list':
+            {
+                let listMessage = `*Current Markets*\n`;
+                let index = 1;
+                for (const [market, status] of Object.entries(markets)) {
+                    const name = marketNames[market] || 'N/A';
+                    listMessage += `${index}. ${market} (${name}) - ${status === null ? 'Enabled' : 'Disabled'}\n`;
+                    index++;
+                }
+                ctx.reply(listMessage, { parse_mode: 'Markdown' });
+            }
+            break;
+        case 'name':
+            {
+                const index = validatePositiveInteger(args[1].replace('#', ''));
+                const newMarketName = args[2];
+
+                const marketSymbol = getMarketByIndex(index);
+                if (!marketSymbol) {
+                    ctx.reply(`Market with index ${index} not found.`);
+                    return;
+                }
+
+                marketNames[marketSymbol] = newMarketName;
+                writeConfig(); // 更新配置文件
+
+                ctx.reply(`Set name for market ${marketSymbol} to ${newMarketName}`);
+            }
+            break;
+        case 'add':
+            {
+                const marketSymbol = args[1];
+                if (markets[marketSymbol] === undefined) {
+                    markets[marketSymbol] = null;
+                    writeConfig(); // 更新配置文件
+
+                    ctx.reply(`Added market: ${marketSymbol}`);
+                } else {
+                    ctx.reply(`Market ${marketSymbol} already exists.`);
+                }
+            }
+            break;
+        case 'remove':
+            {
+                const index = validatePositiveInteger(args[1]);
+
+                const marketSymbol = getMarketByIndex(index);
+                if (!marketSymbol) {
+                    ctx.reply(`Market with index ${index} not found.`);
+                    return;
+                }
+
+                delete markets[marketSymbol];
+                delete marketNames[marketSymbol];
+                writeConfig(); // 更新配置文件
+
+                ctx.reply(`Removed market: ${marketSymbol}`);
+            }
+            break;
+        case 'enable':
+            {
+                const index = validatePositiveInteger(args[1]);
+
+                const marketSymbol = getMarketByIndex(index);
+                if (!marketSymbol) {
+                    ctx.reply(`Market with index ${index} not found.`);
+                    return;
+                }
+
+                markets[marketSymbol] = null;
+                writeConfig(); // 更新配置文件
+
+                ctx.reply(`Enabled market: ${marketSymbol}`);
+
+                clearTimeout(cycleSendMarketDataTimeout);
+                cycleSendMarketData();
+            }
+            break;
+        case 'disable':
+            {
+                const index = validatePositiveInteger(args[1]);
+
+                const marketSymbol = getMarketByIndex(index);
+                if (!marketSymbol) {
+                    ctx.reply(`Market with index ${index} not found.`);
+                    return;
+                }
+
+                markets[marketSymbol] = 'disabled';
+                writeConfig(); // 更新配置文件
+
+                ctx.reply(`Disabled market: ${marketSymbol}`);
+
+                clearTimeout(cycleSendMarketDataTimeout);
+                cycleSendMarketData();
+            }
+            break;
+        default:
+            ctx.reply('Unknown command');
+    }
+}
+
+// 创建通用命令处理器
+function createCommandHandler(command) {
+    return (ctx) => {
+        const args = ctx.message.text.split(' ');
+        commandQueue.push({ command, ctx, args });
+        processCommandQueue();
+    };
+}
+
 // 注册命令处理器
-bot.command('timer', (ctx) => {
-    const args = ctx.message.text.split(' ');
-    commandQueue.push({ command: 'timer', ctx, args });
-    processCommandQueue();
-});
-
-bot.command('list', (ctx) => {
-    commandQueue.push({ command: 'list', ctx });
-    processCommandQueue();
-});
-
-bot.command('name', (ctx) => {
-    const args = ctx.message.text.split(' ');
-    commandQueue.push({ command: 'name', ctx, args });
-    processCommandQueue();
-});
-
-bot.command('add', (ctx) => {
-    const args = ctx.message.text.split(' ');
-    commandQueue.push({ command: 'add', ctx, args });
-    processCommandQueue();
-});
-
-bot.command('remove', (ctx) => {
-    const args = ctx.message.text.split(' ');
-    commandQueue.push({ command: 'remove', ctx, args });
-    processCommandQueue();
-});
-
-bot.command('enable', (ctx) => {
-    const args = ctx.message.text.split(' ');
-    commandQueue.push({ command: 'enable', ctx, args });
-    processCommandQueue();
-});
-
-bot.command('disable', (ctx) => {
-    const args = ctx.message.text.split(' ');
-    commandQueue.push({ command: 'disable', ctx, args });
-    processCommandQueue();
+Object.keys(commandHandlers).forEach(command => {
+    bot.command(command, createCommandHandler(command));
 });
 
 // 初始化市场数据和定时器
