@@ -16,7 +16,7 @@ let cycleSendMarketDataTimeout; // 定义定时器变量
 let commandQueue = []; // 命令队列
 let isProcessing = false; // 是否正在处理命令
 
-const configFilePath = path.join(__dirname, 'marketConfig.json');
+const configFilePath = path.join('./marketConfig.json');
 
 // 读取配置文件
 function readConfig() {
