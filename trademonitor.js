@@ -84,6 +84,7 @@ function cycleSendMarketData() {
     const currentMarket = marketSymbols[marketIndex];
     sendMarketData(currentMarket).then(() => {
         marketIndex = (marketIndex + 1) % marketSymbols.length; // 更新索引，循环到下一个市场
+        clearTimeout(cycleSendMarketDataTimeout); // 清除之前的定时器
         cycleSendMarketDataTimeout = setTimeout(cycleSendMarketData, globalInterval); // 设置下一次发送的时间间隔
     });
 }
