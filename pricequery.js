@@ -13,8 +13,8 @@ const realm = 'Asia/Shanghai'; // 默认时区
  */
 async function getMarketPrice(symbol) {
     try {
-        const queryOptions = { modules: ['price'] };
-        const data = await yf.quote(symbol, queryOptions);
+        // const queryOptions = { modules: ['price'] };
+        const data = await yf.quote(symbol);
 
         // 获取当前市场价格
         const currentPrice = data.regularMarketPrice;
