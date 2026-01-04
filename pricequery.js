@@ -1,5 +1,7 @@
-import yf from 'yahoo-finance2';
+import YahooFinance from "yahoo-finance2"
 import moment from 'moment-timezone';
+
+const yf = new YahooFinance();
 
 let lastPrices = {}; // 用于存储上次获取的价格
 const realm = 'Asia/Shanghai'; // 默认时区
